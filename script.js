@@ -64,30 +64,35 @@ if(userLogin) tampilkanUI();
 function tangkapFoto(tipe) {
     const video = tipe === 'absen' ? document.getElementById('video-feed') : document.getElementById('video-setor');
     const img = tipe === 'absen' ? document.getElementById('img-final') : document.getElementById('img-setor-final');
-    const btnAmbil = tipe === 'absen' ? document.getElementById('btn-ambil') : event.target; // Tombol yang diklik
-    const btnUlang = tipe === 'absen' ? document.getElementById('btn-ulang') : null;
-
     const canvas = document.getElementById('canvas-capture');
+    const ctx = canvas.getContext('2d');
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    canvas.getContext('2d').drawImage(video, 0, 0);
+
+    // Apply Mirror & Filter ke Canvas sebelum capture
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.filter = "contrast(150%) brightness(80%) sepia(50%) hue-rotate(-50deg) saturate(200%)";
+    
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     fotoData = canvas.toDataURL('image/jpeg');
     
-    // Sembunyikan Video, Tampilkan Hasil Foto
     video.classList.add('hidden');
     img.src = fotoData;
     img.classList.remove('hidden');
+    img.classList.add('filter-jahat'); // Pastikan preview gambar juga pakai filter
 
-    // Logika tombol khusus setor (Cari tombol ulang di sekitarnya atau buat dinamis)
+    // Logika tombol (tetap sama seperti sebelumnya)
     if (tipe === 'setor') {
-        // Jika setor, kita buat tombol ambil jadi tombol ulang sementara
+        const btnAmbil = event.target;
         btnAmbil.innerText = "ULANG FOTO";
         btnAmbil.onclick = () => resetKamera('setor', btnAmbil);
         btnAmbil.classList.replace('bg-indigo-600', 'bg-amber-500');
     } else {
-        btnAmbil.classList.add('hidden');
-        btnUlang.classList.remove('hidden');
+        document.getElementById('btn-ambil').classList.add('hidden');
+        document.getElementById('btn-ulang').classList.remove('hidden');
     }
 }
 
@@ -184,11 +189,24 @@ async function prosesAbsen(shiftId) {
 async function aktifkanKamera() {
     const isSetor = document.getElementById('page-setor').classList.contains('active');
     const video = document.getElementById(isSetor ? 'video-setor' : 'video-feed');
+    
+    // Tambahkan class filter jahat
+    video.classList.add('filter-jahat');
+
     try {
         if(streamKamera) streamKamera.getTracks().forEach(t => t.stop());
-        streamKamera = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+        streamKamera = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                facingMode: "user",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }, 
+            audio: false 
+        });
         video.srcObject = streamKamera;
-    } catch (err) { console.warn("Kamera tidak aktif"); }
+    } catch (err) { 
+        console.warn("Kamera tidak aktif"); 
+    }
 }
 
 function resetKamera() { location.reload(); }
