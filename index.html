@@ -16,6 +16,17 @@
             box-sizing:border-box;
         }
 
+        /* Menghilangkan efek mirror pada kamera */
+video, #img-final, #img-setor-final {
+    transform: scaleX(-1);
+}
+
+/* Filter Wajah Jahat (High Contrast, Red Tint, & Vignette) */
+.filter-jahat {
+    filter: contrast(150%) brightness(80%) sepia(50%) hue-rotate(-50deg) saturate(200%);
+    box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.5);
+}
+
         html,
         body{
             overflow-x:hidden;
